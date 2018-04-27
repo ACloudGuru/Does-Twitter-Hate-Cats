@@ -1,0 +1,41 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Extract sentiment from tweet
+Resources:
+  twitterSentiment:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: .
+      Description: Extract sentiment from tweet
+      MemorySize: 128
+      Timeout: 30
+      Role: 'arn:aws:iam::XXXXXXXXXXXX:role/twitterSentiment'
+      Events:
+        DynamoDB1:
+          Type: DynamoDB
+          Properties:
+            Stream:
+              'Fn::GetAtt':
+                - Table1
+                - StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 1
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: twitterSentiment
+  Table1:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
